@@ -26,8 +26,10 @@ yarn-error.log*
 pnpm-debug.log*
 
 # Local data, ChromaDB, cache, media
-backend/chroma_store/
-backend/data/
+backend/chroma_store/*
+!backend/chroma_store/.gitkeep
+backend/data/*
+!backend/data/.gitkeep
 *.mp3
 *.mp4
 *.m4a
