@@ -1,0 +1,43 @@
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.venv/
+venv/
+dist/
+build/
+*.egg-info/
+
+# Node
+node_modules/
+.next/
+out/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Local data, ChromaDB, cache, media
+backend/chroma_store/
+backend/data/
+*.mp3
+*.mp4
+*.m4a
+*.webm
+*.wav
+*.srt
+*.vtt
+.cache/
+cache/
+
+# OS/editor
+.DS_Store
+.vscode/
