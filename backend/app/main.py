@@ -5,7 +5,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sse_starlette.sse import EventSourceResponse
 
-from app.core.config import get_settings
+from app.core.config import get_frontend_origins, get_settings
 from app.core.logging import configure_logging
 from app.extractors.instagram import fetch_instagram_metadata
 from app.extractors.youtube import fetch_youtube_metadata
@@ -23,7 +23,7 @@ settings = get_settings()
 app = FastAPI(title=settings.app_name)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.frontend_origin],
+    allow_origins=get_frontend_origins(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
