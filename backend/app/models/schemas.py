@@ -21,7 +21,7 @@ class VideoMetadata(BaseModel):
     comments: int = 0
     views: int = 0
     upload_date: str | None = None
-    duration_seconds: int | None = None
+    duration_seconds: float | None = None
     hashtags: list[str] = []
     engagement_rate: float = 0.0
 
