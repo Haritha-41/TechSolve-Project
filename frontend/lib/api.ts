@@ -13,7 +13,8 @@ export async function analyzeVideos(videoAUrl: string, videoBUrl: string): Promi
   });
 
   if (!response.ok) {
-    throw new Error("Video analysis failed");
+    const error = await response.json().catch(() => ({ detail: "Video analysis failed" }));
+    throw new Error(error.detail ?? "Video analysis failed");
   }
 
   return response.json();
@@ -32,10 +33,27 @@ export async function streamChat(collectionName: string, message: string, onToke
 
   const reader = response.body.getReader();
   const decoder = new TextDecoder();
+  let buffer = "";
 
   while (true) {
     const { done, value } = await reader.read();
     if (done) break;
-    onToken(decoder.decode(value));
+    buffer += decoder.decode(value, { stream: true });
+    buffer = parseSseBuffer(buffer, onToken);
   }
+}
+
+function parseSseBuffer(buffer: string, onToken: (token: string) => void) {
+  const events = buffer.split("\n\n");
+  const remainder = events.pop() ?? "";
+
+  for (const event of events) {
+    for (const line of event.split("\n")) {
+      if (line.startsWith("data: ") && line !== "data: [done]") {
+        onToken(line.slice(6));
+      }
+    }
+  }
+
+  return remainder;
 }

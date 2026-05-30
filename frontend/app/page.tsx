@@ -15,6 +15,10 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
 
   async function handleAnalyze() {
+    if (!videoAUrl.trim() || !videoBUrl.trim()) {
+      setError("Add both video URLs before analyzing.");
+      return;
+    }
     setIsLoading(true);
     setError("");
     try {
