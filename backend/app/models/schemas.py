@@ -17,13 +17,13 @@ class VideoMetadata(BaseModel):
     url: str
     creator_name: str = "Unknown"
     follower_count: int | None = None
-    likes: int = 0
-    comments: int = 0
-    views: int = 0
+    likes: int | None = None
+    comments: int | None = None
+    views: int | None = None
     upload_date: str | None = None
     duration_seconds: float | None = None
     hashtags: list[str] = []
-    engagement_rate: float = 0.0
+    engagement_rate: float | None = None
 
 
 class TranscriptChunk(BaseModel):

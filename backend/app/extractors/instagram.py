@@ -29,9 +29,9 @@ def fetch_instagram_metadata(url: str) -> dict:
         "url": url,
         "creator_name": creator_name,
         "follower_count": follower_count,
-        "likes": likes or 0,
-        "comments": comments or 0,
-        "views": views or 0,
+        "likes": likes,
+        "comments": comments,
+        "views": views,
         "upload_date": _format_timestamp(info),
         "duration_seconds": info.get("duration"),
         "hashtags": _extract_hashtags(info),
@@ -159,11 +159,14 @@ def _find_nested_count(value, keys: tuple[str, ...]):
 
 
 def _profile_username(info: dict, creator_name: str) -> str | None:
-    username = _first_text(info, "uploader_id", "channel_id", "uploader")
+    username = _first_text(info, "channel", "channel_id", "uploader")
     if username and not username.startswith("http"):
         return username.lstrip("@")
     if creator_name != "Unknown" and " " not in creator_name:
         return creator_name.lstrip("@")
+    username = _first_text(info, "uploader_id")
+    if username and not username.isdigit():
+        return username.lstrip("@")
     return None
 
 

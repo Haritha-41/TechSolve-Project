@@ -9,13 +9,13 @@ export type VideoMetadata = {
   url: string;
   creator_name: string;
   follower_count?: number | null;
-  likes: number;
-  comments: number;
-  views: number;
+  likes?: number | null;
+  comments?: number | null;
+  views?: number | null;
   upload_date?: string | null;
   duration_seconds?: number | null;
   hashtags: string[];
-  engagement_rate: number;
+  engagement_rate?: number | null;
 };
 
 export type TranscriptChunk = {

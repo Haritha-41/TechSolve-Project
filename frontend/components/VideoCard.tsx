@@ -20,7 +20,7 @@ export function VideoCard({ label, analysis }: VideoCardProps) {
         <Metric label="Comments" value={formatMetric(analysis?.metadata.comments)} />
         <Metric label="Followers" value={formatMetric(analysis?.metadata.follower_count)} />
         <Metric label="Duration" value={formatDuration(analysis?.metadata.duration_seconds)} />
-        <Metric label="Engagement" value={analysis ? `${analysis.metadata.engagement_rate}%` : "N/A"} />
+        <Metric label="Engagement" value={formatEngagement(analysis?.metadata.engagement_rate)} />
       </dl>
       {analysis?.metadata.upload_date ? <p className="mt-3 text-xs text-zinc-500">Uploaded {analysis.metadata.upload_date}</p> : null}
       {analysis?.metadata.hashtags?.length ? (
@@ -57,4 +57,9 @@ function formatDuration(seconds?: number | null) {
 function formatMetric(value?: number | null) {
   if (value === undefined || value === null) return "N/A";
   return new Intl.NumberFormat("en").format(value);
+}
+
+function formatEngagement(value?: number | null) {
+  if (value === undefined || value === null) return "N/A";
+  return `${value}%`;
 }

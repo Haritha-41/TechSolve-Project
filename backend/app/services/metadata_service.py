@@ -1,17 +1,17 @@
 from app.models.schemas import VideoMetadata
 
 
-def calculate_engagement_rate(likes: int, comments: int, views: int) -> float:
-    if views <= 0:
-        return 0.0
-    return round(((likes + comments) / views) * 100, 2)
+def calculate_engagement_rate(likes: int | None, comments: int | None, views: int | None) -> float | None:
+    if not views or views <= 0:
+        return None
+    return round((((likes or 0) + (comments or 0)) / views) * 100, 2)
 
 
 def build_metadata(raw: dict) -> VideoMetadata:
     engagement_rate = calculate_engagement_rate(
-        raw.get("likes", 0),
-        raw.get("comments", 0),
-        raw.get("views", 0),
+        raw.get("likes"),
+        raw.get("comments"),
+        raw.get("views"),
     )
     return VideoMetadata(**raw, engagement_rate=engagement_rate)
 
