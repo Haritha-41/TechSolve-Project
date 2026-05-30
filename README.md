@@ -1,6 +1,6 @@
 # SocialSense RAG
 
-SocialSense RAG is a zero-cost full-stack starter for comparing one YouTube video and one Instagram Reel with transcript-grounded chat.
+SocialSense RAG is a zero-cost full-stack starter for comparing any two supported social videos from YouTube or Instagram with transcript-grounded chat.
 
 ## Tech Stack
 
@@ -62,7 +62,7 @@ Frontend:
 
 The backend separates extraction, metadata calculation, transcript handling, chunking, embeddings, vector storage, memory, and RAG streaming. The default embedding provider is local sentence-transformers, with the provider isolated so Gemini embeddings can be added later. The frontend contains a URL form, side-by-side video cards, and a chat panel wired to backend APIs.
 
-The MVP analyzes public YouTube and Instagram URLs with `yt-dlp`, computes engagement rate, stores transcript chunks in ChromaDB with source metadata, retrieves relevant chunks for each chat turn, and streams Gemini answers with requested citation formatting. If `GEMINI_API_KEY` is missing, chat returns a configuration-safe retrieval response instead of failing silently.
+The MVP analyzes public YouTube and Instagram URLs with `yt-dlp`, computes engagement rate, stores transcript chunks in ChromaDB with source metadata, retrieves relevant chunks for each chat turn, and streams Gemini answers with requested citation formatting. You can compare two YouTube videos, two Instagram reels, or one of each. If `GEMINI_API_KEY` is missing, chat returns a configuration-safe retrieval response instead of failing silently.
 
 ## Scalability Notes
 
@@ -74,8 +74,8 @@ The MVP analyzes public YouTube and Instagram URLs with `yt-dlp`, computes engag
 
 ## Known Limitations
 
-- Instagram transcript extraction is a placeholder and should use local Whisper fallback in the full build.
 - Instagram transcription uses local Whisper fallback and can be slow on long videos.
+- Some Instagram reels require session cookies. Set `INSTAGRAM_COOKIES_FILE` to a Netscape `cookies.txt` export when public extraction fails.
 - Gemini answers require a free-tier `GEMINI_API_KEY`.
 - Social platforms can rate-limit or block metadata extraction.
 - Engagement metrics depend on what yt-dlp can access publicly.
@@ -84,6 +84,6 @@ The MVP analyzes public YouTube and Instagram URLs with `yt-dlp`, computes engag
 
 - Start backend and confirm `GET /health` returns `{"status":"ok"}`.
 - Start frontend at `http://localhost:3000`.
-- Enter one YouTube URL and one Instagram Reel URL.
+- Enter any two supported YouTube or Instagram URLs.
 - Confirm video cards show metadata and transcript preview.
 - Ask a comparison question and confirm streamed answer output.

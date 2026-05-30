@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
     whisper_model: str = "tiny"
     retrieval_k: int = 6
+    instagram_cookies_file: str = ""
     app_name: str = "SocialSense RAG"
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")

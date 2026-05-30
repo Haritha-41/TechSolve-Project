@@ -35,7 +35,7 @@ export default function Home() {
       <header className="border-b border-zinc-200 bg-white">
         <div className="mx-auto max-w-6xl px-6 py-5">
           <h1 className="text-2xl font-semibold tracking-normal text-zinc-950">SocialSense RAG</h1>
-          <p className="mt-1 text-sm text-zinc-600">Compare one YouTube video and one Instagram Reel with transcript-grounded chat.</p>
+          <p className="mt-1 text-sm text-zinc-600">Compare any two supported videos from YouTube or Instagram with transcript-grounded chat.</p>
         </div>
       </header>
       <UrlForm videoAUrl={videoAUrl} videoBUrl={videoBUrl} isLoading={isLoading} onVideoAChange={setVideoAUrl} onVideoBChange={setVideoBUrl} onAnalyze={handleAnalyze} />
