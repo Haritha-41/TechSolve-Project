@@ -14,3 +14,12 @@ def build_metadata(raw: dict) -> VideoMetadata:
         raw.get("views", 0),
     )
     return VideoMetadata(**raw, engagement_rate=engagement_rate)
+
+
+def detect_platform(url: str) -> str:
+    lowered_url = url.lower()
+    if "youtube.com" in lowered_url or "youtu.be" in lowered_url:
+        return "youtube"
+    if "instagram.com" in lowered_url:
+        return "instagram"
+    raise ValueError("URL must be from YouTube or Instagram")

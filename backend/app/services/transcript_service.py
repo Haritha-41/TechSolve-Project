@@ -1,4 +1,6 @@
 import logging
+import re
+from html import unescape
 
 from app.extractors.instagram import fetch_instagram_transcript
 from app.extractors.youtube import fetch_youtube_transcript
@@ -20,4 +22,10 @@ def fetch_transcript(url: str, platform: str) -> list[dict]:
 
 
 def transcript_to_text(transcript: list[dict]) -> str:
-    return " ".join(item.get("text", "") for item in transcript).strip()
+    return normalize_transcript(" ".join(item.get("text", "") for item in transcript))
+
+
+def normalize_transcript(text: str) -> str:
+    cleaned = unescape(text)
+    cleaned = re.sub(r"\s+", " ", cleaned)
+    return cleaned.strip()

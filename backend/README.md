@@ -7,7 +7,7 @@ FastAPI starter for SocialSense RAG.
 Requires Python 3.11+ and ffmpeg.
 
 ```bash
-python3.11 -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env

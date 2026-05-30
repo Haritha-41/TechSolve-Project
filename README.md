@@ -29,7 +29,7 @@ Backend:
 
 ```bash
 cd backend
-python3.11 -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env
@@ -62,6 +62,8 @@ Frontend:
 
 The backend separates extraction, metadata calculation, transcript handling, chunking, embeddings, vector storage, memory, and RAG streaming. The default embedding provider is local sentence-transformers, with the provider isolated so Gemini embeddings can be added later. The frontend contains a URL form, side-by-side video cards, and a chat panel wired to backend APIs.
 
+The MVP analyzes public YouTube and Instagram URLs with `yt-dlp`, computes engagement rate, stores transcript chunks in ChromaDB with source metadata, retrieves relevant chunks for each chat turn, and streams Gemini answers with requested citation formatting. If `GEMINI_API_KEY` is missing, chat returns a configuration-safe retrieval response instead of failing silently.
+
 ## Scalability Notes
 
 - Move ChromaDB to a managed or remote vector store if collections become large.
@@ -73,7 +75,8 @@ The backend separates extraction, metadata calculation, transcript handling, chu
 ## Known Limitations
 
 - Instagram transcript extraction is a placeholder and should use local Whisper fallback in the full build.
-- Streaming chat currently returns a placeholder response.
+- Instagram transcription uses local Whisper fallback and can be slow on long videos.
+- Gemini answers require a free-tier `GEMINI_API_KEY`.
 - Social platforms can rate-limit or block metadata extraction.
 - Engagement metrics depend on what yt-dlp can access publicly.
 

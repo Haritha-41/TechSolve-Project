@@ -1,19 +1,84 @@
 import logging
 
+from langchain_google_genai import ChatGoogleGenerativeAI
+
+from app.core.config import get_settings
 from app.models.schemas import ChatRequest
-from app.rag.memory import get_memory
+from app.rag.memory import format_history, get_memory
+from app.rag.vector_store import retrieve_chunks
 
 logger = logging.getLogger(__name__)
 
 
 async def stream_rag_answer(request: ChatRequest):
     memory = get_memory(request.session_id)
-    memory.chat_memory.add_user_message(request.message)
-    logger.info("Streaming placeholder RAG response for session %s", request.session_id)
+    memory.messages.append(("User", request.message))
+    docs = retrieve_chunks(request.collection_name, request.message)
+    prompt = _build_prompt(request.message, docs, format_history(memory))
+    logger.info("Streaming RAG response for session %s", request.session_id)
 
-    response = "RAG pipeline placeholder. Analyze videos first, then wire retrieval and Gemini streaming here."
-    for token in response.split(" "):
-        yield {"event": "token", "data": f"{token} "}
+    response = ""
+    if not get_settings().gemini_api_key:
+        response = _build_missing_key_response(docs)
+        for token in response.split(" "):
+            yield {"event": "token", "data": f"{token} "}
+    else:
+        async for token in _stream_gemini(prompt):
+            response += token
+            yield {"event": "token", "data": token}
 
-    memory.chat_memory.add_ai_message(response)
+    memory.messages.append(("Assistant", response))
     yield {"event": "done", "data": "[done]"}
+
+
+async def _stream_gemini(prompt: str):
+    settings = get_settings()
+    llm = ChatGoogleGenerativeAI(
+        model=settings.gemini_model,
+        google_api_key=settings.gemini_api_key,
+        temperature=0.2,
+    )
+    async for chunk in llm.astream(prompt):
+        content = chunk.content
+        if isinstance(content, str):
+            yield content
+
+
+def _build_prompt(question: str, docs: list, history: str) -> str:
+    context = "\n\n".join(_format_doc(doc) for doc in docs)
+    return f"""
+You are SocialSense RAG, an analyst for short-form video creators.
+Answer only from the retrieved transcript chunks and available metadata.
+Compare Video A and Video B when useful. Be specific and practical.
+Every factual claim from transcripts must cite sources as [Video A, chunk A-1].
+If context is insufficient, say what is missing.
+
+Conversation history:
+{history or "No previous conversation."}
+
+Retrieved context:
+{context or "No transcript chunks were retrieved."}
+
+User question:
+{question}
+""".strip()
+
+
+def _format_doc(doc) -> str:
+    meta = doc.metadata
+    return (
+        f"[Video {meta.get('source_video')}, chunk {meta.get('chunk_id')}] "
+        f"Creator: {meta.get('creator_name')}. URL: {meta.get('video_url')}.\n"
+        f"{doc.page_content}"
+    )
+
+
+def _build_missing_key_response(docs: list) -> str:
+    citations = ", ".join(
+        f"[Video {doc.metadata.get('source_video')}, chunk {doc.metadata.get('chunk_id')}]"
+        for doc in docs[:3]
+    )
+    return (
+        "Gemini is not configured yet. Add GEMINI_API_KEY to backend/.env to enable full AI answers. "
+        f"I retrieved relevant transcript context for this question: {citations or 'no matching chunks found'}."
+    )

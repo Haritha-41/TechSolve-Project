@@ -13,7 +13,7 @@ from app.models.schemas import AnalyzeVideosRequest, AnalyzeVideosResponse, Chat
 from app.rag.chain import stream_rag_answer
 from app.rag.chunker import chunk_transcript
 from app.rag.vector_store import add_chunks
-from app.services.metadata_service import build_metadata
+from app.services.metadata_service import build_metadata, detect_platform
 from app.services.transcript_service import fetch_transcript, transcript_to_text
 
 configure_logging()
@@ -40,10 +40,13 @@ def analyze_videos(payload: AnalyzeVideosRequest) -> AnalyzeVideosResponse:
     try:
         collection_name = f"socialsense-{uuid4().hex[:12]}"
         analyses = [
-            _analyze_video(str(payload.video_a.url), payload.video_a.label, "youtube", collection_name),
-            _analyze_video(str(payload.video_b.url), payload.video_b.label, "instagram", collection_name),
+            _analyze_video(str(payload.video_a.url), payload.video_a.label, collection_name),
+            _analyze_video(str(payload.video_b.url), payload.video_b.label, collection_name),
         ]
         return AnalyzeVideosResponse(videos=analyses, collection_name=collection_name)
+    except ValueError as exc:
+        logger.warning("Invalid analysis request: %s", exc)
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:
         logger.exception("Video analysis failed")
         raise HTTPException(status_code=500, detail="Video analysis failed") from exc
@@ -54,14 +57,17 @@ async def chat_stream(payload: ChatRequest) -> EventSourceResponse:
     return EventSourceResponse(stream_rag_answer(payload))
 
 
-def _analyze_video(url: str, label: str, platform: str, collection_name: str) -> VideoAnalysis:
+def _analyze_video(url: str, label: str, collection_name: str) -> VideoAnalysis:
+    platform = detect_platform(url)
     raw_metadata = fetch_youtube_metadata(url) if platform == "youtube" else fetch_instagram_metadata(url)
     metadata = build_metadata(raw_metadata)
     transcript = fetch_transcript(url, platform)
-    chunks = chunk_transcript(label, transcript)
+    chunks = chunk_transcript(label, transcript, metadata.creator_name, metadata.url)
     add_chunks(collection_name, chunks)
+    transcript_text = transcript_to_text(transcript)
     return VideoAnalysis(
         metadata=metadata,
-        transcript_preview=transcript_to_text(transcript)[:500],
+        transcript_preview=transcript_text[:500],
+        transcript=transcript_text,
         chunks=chunks,
     )
