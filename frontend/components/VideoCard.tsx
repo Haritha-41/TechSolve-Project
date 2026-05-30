@@ -15,12 +15,12 @@ export function VideoCard({ label, analysis }: VideoCardProps) {
       <h3 className="min-h-12 text-base font-medium text-zinc-950">{analysis?.metadata.title ?? "Add a URL and analyze"}</h3>
       <p className="mt-2 text-sm text-zinc-600">{analysis?.metadata.creator_name ?? "Creator details will appear after analysis."}</p>
       <dl className="mt-4 grid grid-cols-2 gap-2 text-sm md:grid-cols-3">
-        <Metric label="Views" value={analysis?.metadata.views ?? 0} />
-        <Metric label="Likes" value={analysis?.metadata.likes ?? 0} />
-        <Metric label="Comments" value={analysis?.metadata.comments ?? 0} />
-        <Metric label="Followers" value={analysis?.metadata.follower_count ?? "N/A"} />
+        <Metric label="Views" value={formatMetric(analysis?.metadata.views)} />
+        <Metric label="Likes" value={formatMetric(analysis?.metadata.likes)} />
+        <Metric label="Comments" value={formatMetric(analysis?.metadata.comments)} />
+        <Metric label="Followers" value={formatMetric(analysis?.metadata.follower_count)} />
         <Metric label="Duration" value={formatDuration(analysis?.metadata.duration_seconds)} />
-        <Metric label="Engagement" value={`${analysis?.metadata.engagement_rate ?? 0}%`} />
+        <Metric label="Engagement" value={analysis ? `${analysis.metadata.engagement_rate}%` : "N/A"} />
       </dl>
       {analysis?.metadata.upload_date ? <p className="mt-3 text-xs text-zinc-500">Uploaded {analysis.metadata.upload_date}</p> : null}
       {analysis?.metadata.hashtags?.length ? (
@@ -52,4 +52,9 @@ function formatDuration(seconds?: number | null) {
   const minutes = Math.floor(seconds / 60);
   const remainingSeconds = Math.round(seconds % 60);
   return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
+}
+
+function formatMetric(value?: number | null) {
+  if (value === undefined || value === null) return "N/A";
+  return new Intl.NumberFormat("en").format(value);
 }

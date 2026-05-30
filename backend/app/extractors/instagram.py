@@ -4,6 +4,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from uuid import uuid4
 
+import requests
 from yt_dlp.utils import DownloadError
 from yt_dlp import YoutubeDL
 
@@ -14,16 +15,23 @@ logger = logging.getLogger(__name__)
 
 def fetch_instagram_metadata(url: str) -> dict:
     info = _extract_info(url, download=False)
+    creator_name = _first_text(info, "uploader", "channel", "uploader_id", "channel_id") or "Unknown"
+    follower_count = _extract_follower_count(info, creator_name)
+    views = _extract_count(info, "view_count", "play_count", "video_view_count", "video_play_count", "reel_view_count")
+    likes = _extract_count(info, "like_count", "likes", "edge_media_preview_like", "edge_liked_by")
+    comments = _extract_count(info, "comment_count", "comments", "edge_media_preview_comment", "edge_media_to_comment")
+
+    _log_missing_counts(url, views, likes, comments, follower_count)
 
     return {
         "title": _first_text(info, "title", "description") or "Untitled Instagram Reel",
         "platform": "instagram",
         "url": url,
-        "creator_name": _first_text(info, "uploader", "channel", "uploader_id", "channel_id") or "Unknown",
-        "follower_count": _to_int(info.get("channel_follower_count")),
-        "likes": _to_int(info.get("like_count")),
-        "comments": _to_int(info.get("comment_count")),
-        "views": _to_int(info.get("view_count") or info.get("play_count")),
+        "creator_name": creator_name,
+        "follower_count": follower_count,
+        "likes": likes or 0,
+        "comments": comments or 0,
+        "views": views or 0,
         "upload_date": _format_timestamp(info),
         "duration_seconds": info.get("duration"),
         "hashtags": _extract_hashtags(info),
@@ -115,12 +123,103 @@ def _first_text(info: dict, *keys: str) -> str | None:
     return None
 
 
-def _to_int(value) -> int:
+def _extract_count(info: dict, *keys: str) -> int | None:
+    for key in keys:
+        value = _to_optional_int(info.get(key))
+        if value is not None:
+            return value
+    nested_value = _find_nested_count(info, keys)
+    return _to_optional_int(nested_value)
+
+
+def _extract_follower_count(info: dict, creator_name: str) -> int | None:
+    count = _extract_count(info, "channel_follower_count", "follower_count", "followers")
+    if count is not None:
+        return count
+    username = _profile_username(info, creator_name)
+    if not username:
+        return None
+    return _fetch_profile_follower_count(username)
+
+
+def _find_nested_count(value, keys: tuple[str, ...]):
+    if isinstance(value, dict):
+        for key, nested_value in value.items():
+            if key in keys:
+                return nested_value
+            found = _find_nested_count(nested_value, keys)
+            if found is not None:
+                return found
+    if isinstance(value, list):
+        for item in value:
+            found = _find_nested_count(item, keys)
+            if found is not None:
+                return found
+    return None
+
+
+def _profile_username(info: dict, creator_name: str) -> str | None:
+    username = _first_text(info, "uploader_id", "channel_id", "uploader")
+    if username and not username.startswith("http"):
+        return username.lstrip("@")
+    if creator_name != "Unknown" and " " not in creator_name:
+        return creator_name.lstrip("@")
+    return None
+
+
+def _fetch_profile_follower_count(username: str) -> int | None:
+    url = f"https://www.instagram.com/{username}/"
+    headers = {"User-Agent": "Mozilla/5.0"}
+    try:
+        response = requests.get(url, headers=headers, timeout=8)
+        response.raise_for_status()
+    except requests.RequestException:
+        logger.info("Instagram profile follower fallback failed for %s", username)
+        return None
+
+    match = re.search(r'property="og:description"\s+content="([^"]+)"', response.text)
+    if not match:
+        return None
+    followers_text = match.group(1).split("Followers", 1)[0].split(",")[0].strip()
+    return _parse_compact_count(followers_text)
+
+
+def _parse_compact_count(value: str) -> int | None:
+    compact = value.replace(",", "").strip().lower()
+    match = re.match(r"([\d.]+)\s*([kmb])?", compact)
+    if not match:
+        return None
+    number = float(match.group(1))
+    multiplier = {"k": 1_000, "m": 1_000_000, "b": 1_000_000_000}.get(match.group(2), 1)
+    return int(number * multiplier)
+
+
+def _to_optional_int(value) -> int | None:
     if value is None:
-        return 0
+        return None
+    if isinstance(value, dict):
+        return _to_optional_int(value.get("count"))
     if isinstance(value, str):
         value = value.replace(",", "").strip()
+        parsed = _parse_compact_count(value)
+        if parsed is not None:
+            return parsed
     try:
         return int(float(value))
     except (TypeError, ValueError):
-        return 0
+        return None
+
+
+def _log_missing_counts(url: str, views: int | None, likes: int | None, comments: int | None, followers: int | None) -> None:
+    missing = [
+        name
+        for name, value in {
+            "views": views,
+            "likes": likes,
+            "comments": comments,
+            "followers": followers,
+        }.items()
+        if value is None
+    ]
+    if missing:
+        logger.warning("Instagram metadata missing %s for %s", ", ".join(missing), url)
