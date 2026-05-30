@@ -13,6 +13,10 @@ class Settings(BaseSettings):
     whisper_model: str = "tiny"
     retrieval_k: int = 6
     instagram_cookies_file: str = ""
+    instagram_view_provider: str = ""
+    apify_token: str = ""
+    apify_reel_actor_id: str = "apify/instagram-reel-scraper"
+    apify_timeout_seconds: int = 180
     app_name: str = "SocialSense RAG"
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")

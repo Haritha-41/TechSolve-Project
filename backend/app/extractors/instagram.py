@@ -8,6 +8,7 @@ import requests
 from yt_dlp.utils import DownloadError
 from yt_dlp import YoutubeDL
 
+from app.extractors.apify_instagram import fetch_apify_reel_metadata
 from app.core.config import get_settings
 
 logger = logging.getLogger(__name__)
@@ -16,23 +17,29 @@ logger = logging.getLogger(__name__)
 def fetch_instagram_metadata(url: str) -> dict:
     info = _extract_info(url, download=False)
     creator_name = _first_text(info, "uploader", "channel", "uploader_id", "channel_id") or "Unknown"
+    fallback_metadata = fetch_apify_reel_metadata(url, creator_name if creator_name != "Unknown" else None)
     follower_count = _extract_follower_count(info, creator_name)
     views = _extract_count(info, "view_count", "play_count", "video_view_count", "video_play_count", "reel_view_count")
     likes = _extract_count(info, "like_count", "likes", "edge_media_preview_like", "edge_liked_by")
     comments = _extract_count(info, "comment_count", "comments", "edge_media_preview_comment", "edge_media_to_comment")
 
+    views = views if views is not None else fallback_metadata.get("views")
+    likes = likes if likes is not None else fallback_metadata.get("likes")
+    comments = comments if comments is not None else fallback_metadata.get("comments")
+    follower_count = follower_count if follower_count is not None else fallback_metadata.get("follower_count")
+
     _log_missing_counts(url, views, likes, comments, follower_count)
 
     return {
-        "title": _first_text(info, "title", "description") or "Untitled Instagram Reel",
+        "title": _first_text(info, "title", "description") or fallback_metadata.get("title") or "Untitled Instagram Reel",
         "platform": "instagram",
         "url": url,
-        "creator_name": creator_name,
+        "creator_name": creator_name if creator_name != "Unknown" else fallback_metadata.get("creator_name", creator_name),
         "follower_count": follower_count,
         "likes": likes,
         "comments": comments,
         "views": views,
-        "upload_date": _format_timestamp(info),
+        "upload_date": _format_timestamp(info) or fallback_metadata.get("upload_date"),
         "duration_seconds": info.get("duration"),
         "hashtags": _extract_hashtags(info),
     }
@@ -111,6 +118,9 @@ def _extract_info(url: str, download: bool) -> dict:
 def _cookie_options() -> dict:
     cookies_file = get_settings().instagram_cookies_file
     if not cookies_file:
+        return {}
+    if not Path(cookies_file).expanduser().exists():
+        logger.warning("INSTAGRAM_COOKIES_FILE is set but the file does not exist: %s", cookies_file)
         return {}
     return {"cookiefile": cookies_file}
 
