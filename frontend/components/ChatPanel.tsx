@@ -27,6 +27,13 @@ export function ChatPanel({ collectionName }: ChatPanelProps) {
           return updated;
         });
       });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Chat request failed";
+      setMessages((current) => {
+        const updated = [...current];
+        updated[updated.length - 1] = { role: "assistant", content: message };
+        return updated;
+      });
     } finally {
       setIsStreaming(false);
     }

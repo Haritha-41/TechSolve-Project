@@ -15,20 +15,24 @@ COUNT_KEYS = {
         "viewsCount",
         "views_count",
         "playCount",
+        "playcount",
         "play_count",
         "plays",
+        "engagement_score_view",
         "videoViewCount",
         "video_view_count",
+        "videoPlayCount",
+        "video_play_count",
     ),
     "likes": ("likes", "likeCount", "likesCount", "like_count", "likes_count"),
-    "comments": ("comments", "commentCount", "commentsCount", "comment_count", "comments_count"),
+    "comments": ("comments", "num_comments", "commentCount", "commentsCount", "comment_count", "comments_count"),
     "follower_count": ("followers", "followerCount", "followersCount", "follower_count", "followers_count"),
 }
 
 TEXT_KEYS = {
     "title": ("caption", "description", "title"),
-    "creator_name": ("ownerUsername", "authorUsername", "author_username", "username", "userName"),
-    "upload_date": ("timestamp", "postedAt", "posted_at", "takenAt", "taken_at", "date"),
+    "creator_name": ("user_posted", "ownerUsername", "authorUsername", "author_username", "username", "userName"),
+    "upload_date": ("date_posted", "createdAt", "timestamp", "postedAt", "posted_at", "takenAt", "taken_at", "date"),
 }
 
 
@@ -39,7 +43,12 @@ def fetch_apify_reel_metadata(url: str, username: str | None = None) -> dict:
 
     actor_id = _format_actor_id(settings.apify_reel_actor_id)
     endpoint = f"https://api.apify.com/v2/acts/{actor_id}/run-sync-get-dataset-items"
-    response = _run_actor(endpoint, settings.apify_token, settings.apify_timeout_seconds, _direct_url_input(url))
+    response = _run_actor(
+        endpoint,
+        settings.apify_token,
+        settings.apify_timeout_seconds,
+        _direct_url_input(url, settings.apify_reel_actor_id),
+    )
     if response is None and username:
         response = _run_actor(endpoint, settings.apify_token, settings.apify_timeout_seconds, _username_input(username))
     if response is None:
@@ -53,6 +62,9 @@ def fetch_apify_reel_metadata(url: str, username: str | None = None) -> dict:
 
     if not isinstance(items, list) or not items:
         logger.warning("Apify Instagram Reel fallback returned no dataset items")
+        return {}
+    if all(isinstance(item, dict) and item.get("demo") is True for item in items):
+        logger.warning("Apify Instagram Reel fallback returned demo rows only; check actor access for the API token")
         return {}
 
     item = _best_item(items, url)
@@ -86,7 +98,21 @@ def _run_actor(endpoint: str, token: str, timeout_seconds: int, payload: dict) -
         return None
 
 
-def _direct_url_input(url: str) -> dict:
+def _direct_url_input(url: str, actor_id: str) -> dict:
+    if actor_id == "pratikdani/instagram-reels-scraper":
+        return {
+            "url": url,
+            "use_cache": False,
+        }
+
+    if actor_id == "apidojo/instagram-scraper-api":
+        return {
+            "startUrls": [url],
+            "maxItems": 1,
+            "getStories": False,
+            "customMapFunction": "(object) => { return {...object} }",
+        }
+
     return {
         "urls": [url],
         "directUrls": [url],
@@ -132,7 +158,7 @@ def _best_item(items: list[Any], url: str) -> dict:
     for item in items:
         if isinstance(item, dict) and shortcode and shortcode in str(item):
             return item
-    return next((item for item in items if isinstance(item, dict)), {})
+    return next((item for item in items if isinstance(item, dict) and item.get("demo") is not True), {})
 
 
 def _shortcode(url: str) -> str:

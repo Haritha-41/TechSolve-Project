@@ -11,24 +11,29 @@ logger = logging.getLogger(__name__)
 
 
 async def stream_rag_answer(request: ChatRequest):
-    memory = get_memory(request.session_id)
-    memory.messages.append(("User", request.message))
-    docs = retrieve_chunks(request.collection_name, request.message)
-    prompt = _build_prompt(request.message, docs, format_history(memory))
-    logger.info("Streaming RAG response for session %s", request.session_id)
+    try:
+        memory = get_memory(request.session_id)
+        memory.messages.append(("User", request.message))
+        docs = retrieve_chunks(request.collection_name, request.message)
+        prompt = _build_prompt(request.message, docs, format_history(memory))
+        logger.info("Streaming RAG response for session %s", request.session_id)
 
-    response = ""
-    if not get_settings().gemini_api_key:
-        response = _build_missing_key_response(docs)
-        for token in response.split(" "):
-            yield {"event": "token", "data": f"{token} "}
-    else:
-        async for token in _stream_gemini(prompt):
-            response += token
-            yield {"event": "token", "data": token}
+        response = ""
+        if not get_settings().gemini_api_key:
+            response = _build_missing_key_response(docs)
+            for token in response.split(" "):
+                yield {"event": "token", "data": f"{token} "}
+        else:
+            async for token in _stream_gemini(prompt):
+                response += token
+                yield {"event": "token", "data": token}
 
-    memory.messages.append(("Assistant", response))
-    yield {"event": "done", "data": "[done]"}
+        memory.messages.append(("Assistant", response))
+        yield {"event": "done", "data": "[done]"}
+    except Exception:
+        logger.exception("RAG chat stream failed")
+        yield {"event": "token", "data": "Chat failed while generating an answer. Check the backend logs for details."}
+        yield {"event": "done", "data": "[done]"}
 
 
 async def _stream_gemini(prompt: str):

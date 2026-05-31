@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     instagram_cookies_file: str = ""
     instagram_view_provider: str = ""
     apify_token: str = ""
-    apify_reel_actor_id: str = "apify/instagram-reel-scraper"
+    apify_reel_actor_id: str = "apidojo/instagram-scraper-api"
     apify_timeout_seconds: int = 180
     app_name: str = "SocialSense RAG"
 

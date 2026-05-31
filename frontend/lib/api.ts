@@ -27,6 +27,11 @@ export async function streamChat(collectionName: string, message: string, onToke
     body: JSON.stringify({ collection_name: collectionName, message, session_id: "default" }),
   });
 
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: "Chat request failed" }));
+    throw new Error(error.detail ?? "Chat request failed");
+  }
+
   if (!response.body) {
     throw new Error("Streaming is not available");
   }
@@ -48,10 +53,14 @@ function parseSseBuffer(buffer: string, onToken: (token: string) => void) {
   const remainder = events.pop() ?? "";
 
   for (const event of events) {
+    const dataLines: string[] = [];
     for (const line of event.split("\n")) {
       if (line.startsWith("data: ") && line !== "data: [done]") {
-        onToken(line.slice(6));
+        dataLines.push(line.slice(6));
       }
+    }
+    if (dataLines.length) {
+      onToken(dataLines.join("\n"));
     }
   }
 

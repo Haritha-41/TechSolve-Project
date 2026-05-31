@@ -44,8 +44,9 @@ Keep the token in `backend/.env` only:
 ```env
 INSTAGRAM_VIEW_PROVIDER=apify
 APIFY_TOKEN=your_apify_token
-APIFY_REEL_ACTOR_ID=apify/instagram-reel-scraper
+APIFY_REEL_ACTOR_ID=pratikdani/instagram-reels-scraper
 APIFY_TIMEOUT_SECONDS=180
 ```
 
-The fallback requests only one Reel per run and uses Apify residential proxy settings by default to reduce Instagram `429` rate-limit responses.
+For `apidojo/instagram-scraper-api`, the backend sends a single Reel URL in `startUrls` with `maxItems=1` and reads nested `video.playcount` as the view count.
+For `pratikdani/instagram-reels-scraper`, the backend sends the single Reel URL as `url` with `use_cache=false`.
