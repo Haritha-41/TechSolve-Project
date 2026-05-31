@@ -1,6 +1,6 @@
-# SocialSense RAG
+# TechSolve Test
 
-SocialSense RAG is a zero-cost full-stack starter for comparing any two supported social videos from YouTube or Instagram with transcript-grounded chat.
+TechSolve Test is a zero-cost full-stack starter for comparing any two supported social videos from YouTube or Instagram with transcript-grounded chat.
 
 ## Tech Stack
 

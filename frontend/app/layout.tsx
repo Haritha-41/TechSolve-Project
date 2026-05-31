@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "SocialSense RAG",
+  title: "TechSolve Test",
   description: "Compare social media video transcripts with local RAG.",
 };
 

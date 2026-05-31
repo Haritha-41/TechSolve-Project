@@ -1,6 +1,6 @@
 # Frontend
 
-Next.js TypeScript starter for SocialSense RAG.
+Next.js TypeScript starter for TechSolve Test.
 
 ```bash
 npm install

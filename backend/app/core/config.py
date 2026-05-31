@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     apify_token: str = ""
     apify_reel_actor_id: str = "apidojo/instagram-scraper-api"
     apify_timeout_seconds: int = 180
-    app_name: str = "SocialSense RAG"
+    app_name: str = "TechSolve Test"
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 

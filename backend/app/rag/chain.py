@@ -52,7 +52,7 @@ async def _stream_gemini(prompt: str):
 def _build_prompt(question: str, docs: list, history: str) -> str:
     context = "\n\n".join(_format_doc(doc) for doc in docs)
     return f"""
-You are SocialSense RAG, an analyst for short-form video creators.
+You are TechSolve Test, an analyst for short-form video creators.
 Answer only from the retrieved transcript chunks and available metadata.
 Compare Video A and Video B when useful. Be specific and practical.
 Every factual claim from transcripts must cite sources as [Video A, chunk A-1].

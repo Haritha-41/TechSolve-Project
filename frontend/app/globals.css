@@ -8,6 +8,14 @@
 
 body {
   margin: 0;
-  background: #f4f4f5;
-  color: #18181b;
+  background:
+    radial-gradient(circle at top left, rgba(45, 212, 191, 0.18), transparent 30rem),
+    radial-gradient(circle at top right, rgba(251, 146, 60, 0.14), transparent 28rem),
+    linear-gradient(135deg, #f8fafc 0%, #eef6f8 45%, #f7f3ee 100%);
+  color: #18202f;
+}
+
+button,
+input {
+  font: inherit;
 }

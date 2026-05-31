@@ -1,6 +1,6 @@
 # Backend
 
-FastAPI starter for SocialSense RAG.
+FastAPI starter for TechSolve Test.
 
 ## Setup
 
