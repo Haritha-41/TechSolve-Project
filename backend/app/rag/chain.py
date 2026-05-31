@@ -64,6 +64,9 @@ Conversation history:
 Retrieved context:
 {context or "No transcript chunks were retrieved."}
 
+Available video metadata:
+{_format_metadata_from_docs(docs)}
+
 User question:
 {question}
 """.strip()
@@ -71,11 +74,46 @@ User question:
 
 def _format_doc(doc) -> str:
     meta = doc.metadata
+    if meta.get("document_type") == "metadata":
+        return (
+            f"[Video {meta.get('source_video')}, metadata] "
+            f"Creator: {meta.get('creator_name')}. URL: {meta.get('video_url')}. "
+            f"Views: {_display(meta.get('views'))}. Likes: {_display(meta.get('likes'))}. "
+            f"Comments: {_display(meta.get('comments'))}. Engagement rate: {_display(meta.get('engagement_rate'))}.\n"
+            f"{doc.page_content}"
+        )
     return (
         f"[Video {meta.get('source_video')}, chunk {meta.get('chunk_id')}] "
-        f"Creator: {meta.get('creator_name')}. URL: {meta.get('video_url')}.\n"
+        f"Creator: {meta.get('creator_name')}. URL: {meta.get('video_url')}. "
+        f"Views: {_display(meta.get('views'))}. Likes: {_display(meta.get('likes'))}. "
+        f"Comments: {_display(meta.get('comments'))}. Engagement rate: {_display(meta.get('engagement_rate'))}.\n"
         f"{doc.page_content}"
     )
+
+
+def _format_metadata_from_docs(docs: list) -> str:
+    by_video = {}
+    for doc in docs:
+        meta = doc.metadata
+        source_video = meta.get("source_video")
+        if source_video and source_video not in by_video:
+            by_video[source_video] = meta
+    if not by_video:
+        return "No video metadata was retrieved."
+    return "\n".join(
+        (
+            f"Video {source_video}: title={_display(meta.get('title'))}; "
+            f"creator={_display(meta.get('creator_name'))}; views={_display(meta.get('views'))}; "
+            f"likes={_display(meta.get('likes'))}; comments={_display(meta.get('comments'))}; "
+            f"followers={_display(meta.get('follower_count'))}; "
+            f"engagement_rate={_display(meta.get('engagement_rate'))}; url={_display(meta.get('video_url'))}"
+        )
+        for source_video, meta in sorted(by_video.items())
+    )
+
+
+def _display(value) -> str:
+    return "unavailable" if value is None else str(value)
 
 
 def _build_missing_key_response(docs: list) -> str:

@@ -42,8 +42,11 @@ export async function streamChat(collectionName: string, message: string, onToke
 
   while (true) {
     const { done, value } = await reader.read();
-    if (done) break;
-    buffer += decoder.decode(value, { stream: true });
+    if (done) {
+      parseSseBuffer(buffer, onToken);
+      break;
+    }
+    buffer += decoder.decode(value, { stream: true }).replace(/\r\n/g, "\n").replace(/\r/g, "\n");
     buffer = parseSseBuffer(buffer, onToken);
   }
 }

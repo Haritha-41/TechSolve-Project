@@ -12,7 +12,7 @@ from app.extractors.youtube import fetch_youtube_metadata
 from app.models.schemas import AnalyzeVideosRequest, AnalyzeVideosResponse, ChatRequest, VideoAnalysis
 from app.rag.chain import stream_rag_answer
 from app.rag.chunker import chunk_transcript
-from app.rag.vector_store import add_chunks
+from app.rag.vector_store import add_chunks, add_video_metadata
 from app.services.metadata_service import build_metadata, detect_platform
 from app.services.transcript_service import fetch_transcript, transcript_to_text
 
@@ -61,8 +61,9 @@ def _analyze_video(url: str, label: str, collection_name: str) -> VideoAnalysis:
     platform = detect_platform(url)
     raw_metadata = fetch_youtube_metadata(url) if platform == "youtube" else fetch_instagram_metadata(url)
     metadata = build_metadata(raw_metadata)
+    add_video_metadata(collection_name, label, metadata)
     transcript = fetch_transcript(url, platform)
-    chunks = chunk_transcript(label, transcript, metadata.creator_name, metadata.url)
+    chunks = chunk_transcript(label, transcript, metadata)
     add_chunks(collection_name, chunks)
     transcript_text = transcript_to_text(transcript)
     return VideoAnalysis(

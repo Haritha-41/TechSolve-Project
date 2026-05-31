@@ -35,6 +35,14 @@ class TranscriptChunk(BaseModel):
     text: str
     start_seconds: float | None = None
     end_seconds: float | None = None
+    title: str | None = None
+    platform: str | None = None
+    views: int | None = None
+    likes: int | None = None
+    comments: int | None = None
+    follower_count: int | None = None
+    engagement_rate: float | None = None
+    document_type: str = "transcript"
 
 
 class VideoAnalysis(BaseModel):
