@@ -22,7 +22,7 @@ class VideoMetadata(BaseModel):
     views: int | None = None
     upload_date: str | None = None
     duration_seconds: float | None = None
-    hashtags: list[str] = []
+    hashtags: list[str] = Field(default_factory=list)
     engagement_rate: float | None = None
 
 
@@ -49,7 +49,7 @@ class VideoAnalysis(BaseModel):
     metadata: VideoMetadata
     transcript_preview: str = ""
     transcript: str = ""
-    chunks: list[TranscriptChunk] = []
+    chunks: list[TranscriptChunk] = Field(default_factory=list)
 
 
 class AnalyzeVideosResponse(BaseModel):
@@ -61,7 +61,3 @@ class ChatRequest(BaseModel):
     message: str = Field(..., min_length=1)
     collection_name: str
     session_id: str = "default"
-
-
-class ErrorResponse(BaseModel):
-    detail: str

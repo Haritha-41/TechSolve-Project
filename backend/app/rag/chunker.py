@@ -1,5 +1,4 @@
-from app.models.schemas import TranscriptChunk
-from app.models.schemas import VideoMetadata
+from app.models.schemas import TranscriptChunk, VideoMetadata
 from app.services.transcript_service import normalize_transcript
 
 

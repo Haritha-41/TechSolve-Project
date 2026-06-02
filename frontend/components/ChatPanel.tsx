@@ -29,10 +29,10 @@ export function ChatPanel({ collectionName }: ChatPanelProps) {
         });
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Chat request failed";
+      const errorMessage = error instanceof Error ? error.message : "Chat request failed";
       setMessages((current) => {
         const updated = [...current];
-        updated[updated.length - 1] = { role: "assistant", content: message };
+        updated[updated.length - 1] = { role: "assistant", content: errorMessage };
         return updated;
       });
     } finally {

@@ -1,8 +1,3 @@
-export type VideoInput = {
-  label: string;
-  url: string;
-};
-
 export type VideoMetadata = {
   title: string;
   platform: string;
